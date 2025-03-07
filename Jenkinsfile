@@ -16,12 +16,12 @@ node {
         sh "docker build -t ${imageName} -f applications/hello-kenzan/Dockerfile applications/hello-kenzan"
     }
 
-    stage "Push"
-
+    stage("Push") {
         sh "docker push ${imageName}"
+    }
 
-    stage "Deploy"
 
+    stage("Deploy") {
         kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
-
+    }
 }
