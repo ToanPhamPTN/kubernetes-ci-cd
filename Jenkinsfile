@@ -28,7 +28,7 @@ node {
 
     stage("Deploy") {
         sh "echo Deploying application..."
-        
+        sh "kubectl cluster-info"
         kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
     }
 }
