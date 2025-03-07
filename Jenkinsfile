@@ -27,6 +27,9 @@ node {
 
 
     stage("Deploy") {
+        sh "echo Deploying application..."
+        sh "kubectl get pods -n default"
+        
         kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
     }
 }
