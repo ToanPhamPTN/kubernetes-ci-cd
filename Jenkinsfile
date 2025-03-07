@@ -12,8 +12,13 @@ node {
     imageName = "${registryHost}${appName}:${tag}"
     env.BUILDIMG=imageName
 
+    println "Commit ID: ${tag}"
+    println "Docker Image: ${imageName}"
+
     stage("Build") {
+        println "Building Docker image..."
         sh "docker build -t ${imageName} -f applications/hello-kenzan/Dockerfile applications/hello-kenzan"
+        println "Push complete."
     }
 
     stage("Push") {
