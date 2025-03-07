@@ -13,10 +13,10 @@ node {
     env.BUILDIMG=imageName
     env.BUILD_TAG=tag
 
-    stage "Build"
-    
+    stage("Build") {
         sh "docker build -t ${imageName} applications/monitor-scale"
-    
+    }
+
     stage "Push"
 
         sh "docker push ${imageName}"
