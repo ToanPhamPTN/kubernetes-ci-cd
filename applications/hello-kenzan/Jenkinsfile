@@ -12,24 +12,24 @@ node {
     imageName = "${registryHost}${appName}:${tag}"
     env.BUILDIMG=imageName
 
-    echo "Commit ID: ${tag}"
-    echo "Docker Image: ${imageName}"
+    println "Commit ID: ${tag}"
+    println "Docker Image: ${imageName}"
 
     stage("Build") {
-        echo "Building Docker image..."
+        println "Building Docker image..."
         sh "docker build -t ${imageName} part1/hello-kenzan"
-        echo "Build complete."
+        println "Build complete."
     }
 
     stage("Push") {
-        echo "Pushing Docker image to registry..."
+        println "Pushing Docker image to registry..."
         sh "docker push ${imageName}"
-        echo "Push complete."
+        println "Push complete."
     }
 
     stage("Deploy") {
-        echo "Deploying application with image: ${BUILDIMG}"
+        println "Deploying application with image: ${BUILDIMG}"
         sh "sed 's#__IMAGE__#'$BUILDIMG'#' part1/hello-kenzan/k8s/deployment.yaml | kubectl apply -f -"
-        echo "Deployment applied."
+        println "Deployment applied."
     }
 }
