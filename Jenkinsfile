@@ -23,12 +23,16 @@ node {
 
     stage("Push") {
         sh "docker push ${imageName}"
+        sh "docker tag ${imageName} ${registryHost}${appName}:latest"  
+        sh "docker push ${registryHost}${appName}:latest"
     }
 
 
     stage("Deploy") {
         sh "echo Deploying application..."
-        kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
+        sh "kubectl apply -f applications/${appName}/k8s/"
+        //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
+
     }
     
 }
