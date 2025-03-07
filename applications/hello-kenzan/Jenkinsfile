@@ -8,7 +8,7 @@ node {
 
     tag = readFile('commit-id').replace("\n", "").replace("\r", "")
     appName = "hello-kenzan"
-    registryHost = "192.168.49.2:30912/"
+    registryHost = "127.0.0.1:30912/"
     imageName = "${registryHost}${appName}:${tag}"
     env.BUILDIMG=imageName
 
@@ -21,6 +21,13 @@ node {
     }
 
     stage("Deploy") {
-        sh "sed 's#__IMAGE__#'$BUILDIMG'#' part1/hello-kenzan/k8s/deployment.yaml | kubectl apply -f -"
+        sh 
+        if kubectl get svc hello-kenzan > /dev/null 2>&1; then
+            echo "Service hello-kenzan already exists."
+        else
+            echo "Service hello-kenzan does not exist, it may need to be created."
+        fi
+
+        "sed 's#__IMAGE__#'$BUILDIMG'#' part1/hello-kenzan/k8s/deployment.yaml | kubectl apply -f -"
     }
 }
