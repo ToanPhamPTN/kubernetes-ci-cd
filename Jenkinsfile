@@ -8,7 +8,7 @@ node {
 
     tag = readFile('commit-id').replace("\n", "").replace("\r", "")
     appName = "hello-kenzan"
-    registryHost = "192.168.99.108:30400/"
+    registryHost = "192.168.49.2:30400/"
     imageName = "${registryHost}${appName}:${tag}"
     env.BUILDIMG=imageName
 
@@ -30,6 +30,8 @@ node {
 
     stage("Deploy") {
         sh "echo Deploying application..."
+        sh "kubectl get nodes"
+         
         sh "kubectl apply -f applications/${appName}/k8s/"
         //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
 
