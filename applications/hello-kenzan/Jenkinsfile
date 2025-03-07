@@ -13,7 +13,7 @@ node {
     env.BUILDIMG=imageName
 
     stage("Build") {
-        sh "docker build -t ${imageName} ."
+        sh "docker build -t ${imageName} part1/hello-kenzan"
     }
 
     stage("Push") {
@@ -21,6 +21,6 @@ node {
     }
 
     stage("Deploy") {
-        sh "sed 's#__IMAGE__#'$BUILDIMG'#' k8s/deployment.yaml | kubectl apply -f -"
+        sh "sed 's#__IMAGE__#'$BUILDIMG'#' part1/hello-kenzan/k8s/deployment.yaml | kubectl apply -f -"
     }
 }
