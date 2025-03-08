@@ -29,8 +29,8 @@ node {
     stage("Deploy") {
         //sh "echo Deploying application..."
         //sh "kubectl get nodes"
-        println $KUBECONFIG
-        println "Test"
+        echo $KUBECONFIG
+        echo "Test"
         //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
         sh "export KUBECONFIG=/var/jenkins_home/.kube/config"
         //sh "kubectl config view"
