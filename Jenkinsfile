@@ -2,7 +2,7 @@ node {
 
     checkout scm
 
-    env.DOCKER_API_VERSION="1.24"
+    env.DOCKER_API_VERSION="1.46"
     
     sh "git rev-parse --short HEAD > commit-id"
 
