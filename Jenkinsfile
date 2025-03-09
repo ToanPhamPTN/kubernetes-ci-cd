@@ -41,9 +41,7 @@ node {
         //sh "kubectl get nodes"
         
         sh "kubectl config view"
-        sh "kubectl get nodes"
-        sh "kubectl apply -f applications/hello-kenzan/k8s/"
-        
-    }
+        kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
+    
     
 }
