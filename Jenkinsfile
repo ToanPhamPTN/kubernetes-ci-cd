@@ -39,11 +39,11 @@ node {
         //sh "echo Deploying application..."
         //sh "kubectl config view"
         //sh "kubectl get nodes"
-        //withKubeConfig([credentialsId: 'kenzan_kubeconfig']) {
+        
         sh "kubectl config view"
         sh "kubectl get nodes"
         sh "kubectl apply -f applications/hello-kenzan/k8s/"
-        //}
+        
     }
     
 }
