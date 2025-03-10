@@ -30,7 +30,9 @@ node {
         sh "echo Deploying application..."
         
         sh "kubectl config view"
-        kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
+        sh "kubectl apply -f applications/${appName}/k8s/manual-deployment.yaml"
+        sh "kubectl apply -f applications/${appName}/k8s/deployment.yaml"
+        //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
     
     }
 }
