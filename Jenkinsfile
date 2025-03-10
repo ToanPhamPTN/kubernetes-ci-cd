@@ -27,22 +27,10 @@ node {
 
 
     stage("Deploy") {
-        //sh "echo Deploying application..."
-        //sh "kubectl get nodes"
-        //sh "echo \$KUBECONFIG"
-
-        //echo "Test"
-        //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
-        //sh "export KUBECONFIG=/var/jenkins_home/.kube/config"
-        //sh "kubectl config view"
-
-        //sh "echo Deploying application..."
-        //sh "kubectl config view"
-        //sh "kubectl get nodes"
+        sh "echo Deploying application..."
         
         sh "kubectl config view"
         kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
-        sh "kubectl get nodes"
-    }
     
+    }
 }
