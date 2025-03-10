@@ -29,10 +29,9 @@ node {
     stage("Deploy") {
         sh "echo Deploying application..."
         
-        sh "export KUBECONFIG=/home/toan-pham/.kube/config"
+        //sh "export KUBECONFIG=/home/toan-pham/.kube/config"
         sh "kubectl config view"
         sh "kubectl get nodes"
-        sh "kubectl apply -f applications/${appName}/k8s/"
         //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
     
     }
