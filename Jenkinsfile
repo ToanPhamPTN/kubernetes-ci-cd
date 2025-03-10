@@ -37,6 +37,6 @@ node {
         sh "kubectl config view"
         sh "kubectl get nodes"
         sh "kubectl apply -f applications/${appName}/k8s/"
-        //sh "kubectl rollout restart deployment/${appName}"
+        sh "kubectl rollout restart deployment/${appName}"
     }
 }
