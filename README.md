@@ -55,7 +55,7 @@ Enable the Minikube add-ons Heapster and Ingress.
 
 View the Minikube Dashboard, a web UI for managing deployments.
 
-`minikube service kubernetes-dashboard --namespace kube-system`
+`minikube service kubernetes-dashboard --namespace kubernetes-dashboard`
 
 #### Step4
 
@@ -68,6 +68,9 @@ Deploy the public nginx image from DockerHub into a pod. Nginx is an open source
 Create a K8s Service for the deployment. This will expose the nginx pod so you can access it with a web browser.
 
 `kubectl expose deployment nginx --type NodePort --port 80`
+
+`kubectl create deployment nginx --image=nginx`
+
 
 #### Step6
 
@@ -109,7 +112,7 @@ Let’s make a change to an HTML file in the cloned project. Open the /applicati
 
 Now let’s build an image, giving it a special name that points to our local cluster registry.
 
-`docker build -t 127.0.0.1:30400/hello-kenzan:latest -f applications/hello-kenzan/Dockerfile applications/hello-kenzan`
+`docker build -t 192.168.49.2:30400/hello-kenzan:latest -f applications/hello-kenzan/Dockerfile applications/hello-kenzan`
 
 #### Step13
 
@@ -129,7 +132,7 @@ Now run the proxy container from the newly created image. (Note that you may see
 
 With our proxy container up and running, we can now push our hello-kenzan image to the local repository.
 
-`docker push 127.0.0.1:30400/hello-kenzan:latest`
+`docker push 192.168.49.2:30400/hello-kenzan:latest`
 
 #### Step16
 
@@ -163,7 +166,7 @@ Delete the hello-kenzan deployment and service you created. We are going to keep
 
 First, let's build the Jenkins Docker image we'll use in our Kubernetes cluster.
 
-`docker build -t 127.0.0.1:30400/jenkins:latest -f applications/jenkins/Dockerfile applications/jenkins`
+`docker build -t 192.168.49.2:30400/jenkins:latest -f applications/jenkins/Dockerfile applications/jenkins`
 
 #### Step2
 
@@ -181,7 +184,7 @@ Run the proxy container from the image.
 
 With our proxy container up and running, we can now push our Jenkins image to the local repository.
 
-`docker push 127.0.0.1:30400/jenkins:latest`
+`docker push 192.168.49.2:30400/jenkins:latest`
 
 #### Step5
 
@@ -201,11 +204,17 @@ Open the Jenkins UI in a web browser.
 
 `minikube service jenkins`
 
+`kubectl delete service jenkins`
+
+`kubectl delete deployment jenkins`
+
 #### Step8
 
 Display the Jenkins admin password with the following command, and right-click to copy it.
 
 ``kubectl exec -it `kubectl get pods --selector=app=jenkins --output=jsonpath={.items..metadata.name}` cat /var/jenkins_home/secrets/initialAdminPassword``
+
+<!-- kubectl exec -it $(kubectl get pods --selector=app=jenkins --output=jsonpath={.items..metadata.name}) -- cat /var/jenkins_home/secrets/initialAdminPassword -->
 
 #### Step9
 
@@ -266,6 +275,7 @@ Initialize Helm. This will install Tiller (Helm's server) into our Kubernetes cl
 We will deploy the etcd operator onto the cluster using a Helm Chart.
 
 `helm install stable/etcd-operator --version 0.8.0 --name etcd-operator --debug --wait`
+`helm install etcd-operator stable/etcd-operator --version 0.8.0 --debug --wait`
 
 #### Step3
 
