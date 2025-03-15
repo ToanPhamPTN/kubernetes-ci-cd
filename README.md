@@ -49,7 +49,7 @@ Start up the Kubernetes cluster with Minikube, giving it some extra resources.
 
 Enable the Minikube add-ons Heapster and Ingress.
 
-`minikube addons enable heapster; minikube addons enable ingress`
+`minikube addons enable heapster; minikube addons enable ingress; minikube addons enable dashboard`
 
 #### Step3
 
@@ -230,6 +230,9 @@ Before we create a pipeline, we first need to provision the Kubernetes Continuou
 
 #### Step12
 
+`kubectl exec -it jenkins-569f9fb4d6-z5xx2 -n default -- cat /var/jenkins_home/.kube/config`
+`kubectl exec jenkins-569f9fb4d6-z5xx2 -n default -- sh -c "sed -i 's|192.168.99.108|192.168.49.2|g' /var/jenkins_home/.kube/config"`
+
 The following values must be entered precisely as indicated:
 - Kind: `Kubernetes configuration (kubeconfig)`
 - ID: `kenzan_kubeconfig`
@@ -284,6 +287,9 @@ Deploy the etcd cluster and K8s Services for accessing the cluster.
 - `kubectl create -f manifests/etcd-cluster.yaml`
 - `kubectl create -f manifests/etcd-service.yaml`
 
+
+`kubectl apply -f manifests/etcd-cluster-service.yaml`
+
 #### Step4
 
 The crossword application is a multi-tier application whose services depend on each other. We will create three K8s Services so that the applications can communicate with one another.
@@ -294,7 +300,7 @@ The crossword application is a multi-tier application whose services depend on e
 
 Now we're going to walk through an initial build of the monitor-scale application.
 
-``docker build -t 127.0.0.1:30400/monitor-scale:`git rev-parse --short HEAD` -f applications/monitor-scale/Dockerfile applications/monitor-scale``
+``docker build -t 192.168.49.2:30400/monitor-scale:`git rev-parse --short HEAD` -f applications/monitor-scale/Dockerfile applications/monitor-scale``
 
 #### Step6
 
@@ -312,7 +318,7 @@ Run the proxy container from the newly created image.
 
 Push the monitor-scale image to the registry.
 
-``docker push 127.0.0.1:30400/monitor-scale:`git rev-parse --short HEAD` ``
+``docker push 192.168.49.2:30400/monitor-scale:`git rev-parse --short HEAD` ``
 
 #### Step9
 
@@ -336,7 +342,7 @@ Monitor-scale has the functionality to let us scale our puzzle app up and down t
 
 Create the monitor-scale deployment and the Ingress defining the hostname by which this service will be accessible to the other services.
 
-``sed 's#127.0.0.1:30400/monitor-scale:$BUILD_TAG#127.0.0.1:30400/monitor-scale:'`git rev-parse --short HEAD`'#' applications/monitor-scale/k8s/deployment.yaml | kubectl apply -f -``
+``sed 's#192.168.49.2:30400/monitor-scale:$BUILD_TAG#192.168.49.2:30400/monitor-scale:'`git rev-parse --short HEAD`'#' applications/monitor-scale/k8s/deployment.yaml | kubectl apply -f -``
 
 #### Step13
 

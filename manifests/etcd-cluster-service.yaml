@@ -1,0 +1,86 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-etcd-cluster-client-service
+spec:
+  selector:
+    app: example-etcd-cluster
+  ports:
+    - protocol: TCP
+      port: 2379
+      targetPort: 2379
+      nodePort: 32379
+  type: NodePort
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: example-etcd-cluster
+spec:
+  clusterIP: None
+  selector:
+    app: example-etcd-cluster
+  ports:
+    - name: client
+      port: 2379
+    - name: peer
+      port: 2380
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: example-etcd-cluster
+spec:
+  serviceName: example-etcd-cluster
+  replicas: 3
+  selector:
+    matchLabels:
+      app: example-etcd-cluster
+  template:
+    metadata:
+      labels:
+        app: example-etcd-cluster
+    spec:
+      containers:
+        - name: etcd
+          image: quay.io/coreos/etcd:v3.5.9
+          command:
+            - etcd
+          args:
+            - --name
+            - "$(POD_NAME)"
+            - --data-dir
+            - /var/lib/etcd
+            - --listen-client-urls
+            - http://0.0.0.0:2379
+            - --advertise-client-urls
+            - http://$(POD_NAME).example-etcd-cluster:2379
+            - --listen-peer-urls
+            - http://0.0.0.0:2380
+            - --initial-advertise-peer-urls
+            - http://$(POD_NAME).example-etcd-cluster:2380
+            - --initial-cluster
+            - "example-etcd-cluster-0=http://example-etcd-cluster-0.example-etcd-cluster:2380,example-etcd-cluster-1=http://example-etcd-cluster-1.example-etcd-cluster:2380,example-etcd-cluster-2=http://example-etcd-cluster-2.example-etcd-cluster:2380"
+            - --initial-cluster-state
+            - new
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+          ports:
+            - containerPort: 2379
+            - containerPort: 2380
+          volumeMounts:
+            - name: etcd-data
+              mountPath: /var/lib/etcd
+  volumeClaimTemplates:
+    - metadata:
+        name: etcd-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

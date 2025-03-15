@@ -15,7 +15,7 @@ spec:
 
 ---
 
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: monitor-scale
@@ -24,6 +24,10 @@ metadata:
 spec:
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app: monitor-scale
+      tier: monitor-scale
   template:
     metadata:
       labels:
@@ -32,7 +36,7 @@ spec:
     spec:
       serviceAccountName: monitor-scale
       containers:
-      - image: 127.0.0.1:30400/monitor-scale:$BUILD_TAG
+      - image: 192.168.49.2:30400/monitor-scale:$BUILD_TAG
         name: monitor-scale
         imagePullPolicy: Always
         ports:
@@ -46,22 +50,40 @@ spec:
           name: kubectl-api          
 
 ---
-
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
- name: monitor-scale
- annotations:
-  ingress.kubernetes.io/rewrite-target: /
+  name: monitor-scale
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  backend:
-    serviceName: monitor-scale
-    servicePort: 3001
   rules:
-  - host: monitor-scale.192.168.99.108.xip.io
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: monitor-scale
-          servicePort: 3001
+    - host: monitor-scale.192.168.49.2.xip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: monitor-scale
+                port:
+                  number: 3001
+
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#  name: monitor-scale
+#  annotations:
+#   ingress.kubernetes.io/rewrite-target: /
+# spec:
+#   backend:
+#     serviceName: monitor-scale
+#     servicePort: 3001
+#   rules:
+#   - host: monitor-scale.192.168.99.108.xip.io
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: monitor-scale
+#           servicePort: 3001

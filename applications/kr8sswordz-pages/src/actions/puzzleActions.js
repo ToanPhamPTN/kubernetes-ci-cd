@@ -2,6 +2,7 @@ import fetchRetry from 'fetch-retry';
 import * as actions from './actionTypes';
 import constants from '../constants';
 const baseUrl = `http://puzzle.${constants.minikubeIp}.xip.io/puzzle/v1`;
+//const baseUrl = `http://localhost:3000/puzzle/v1`;
 const arrowDisplayTime = 1000;
 
 export function getPuzzleDataSuccess (json) {
@@ -15,30 +16,35 @@ export function getPuzzleDataFailure () {
 export function getPuzzleData () {
   return dispatch => {
     dispatch({type: actions.puzzle.PUZZLE_LOADING});
+    console.log("baseUrl " + baseUrl)
     return fetchRetry(`${baseUrl}/crossword`, {
       retries: 36,
       retryDelay: 5000
     })
       .then((resp) => {
+        console.log("1", resp)
         return resp.json();
       })
       .then((json) => {
-        if (json.fromCache) {
+        console.log("Response Data:", json);
+        if (json[0].fromCache) {
+          console.log("2")
           dispatch({type: actions.puzzle.FROM_CACHE, data: true});
           setTimeout(() => {
             return dispatch({type: actions.puzzle.FROM_CACHE, data: false});
           }, arrowDisplayTime);
         } else {
+          console.log("3")
           dispatch({type: actions.puzzle.FROM_MONGO, data: true});
           setTimeout(() => {
             return dispatch({type: actions.puzzle.FROM_MONGO, data: false});
           }, arrowDisplayTime);
         }
-
-        return dispatch(getPuzzleDataSuccess(json));
+        console.log("4")
+        return dispatch(getPuzzleDataSuccess(json[0]));
       })
       .catch(err => {
-        console.log(err);
+        console.log("ABC " + err);
         dispatch(getPuzzleDataFailure(err));
       });
   };

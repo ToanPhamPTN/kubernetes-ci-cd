@@ -4,8 +4,10 @@ import DataFlowArrow from './DataFlowArrow';
 function Database (props) {
   return (
     <div className="db-image">
-      <img className="db" src="../../assets/database.svg" />
-      <img className="logo" src={`../../assets/${props.databaseName}-logo.png`} />
+      {/* <img className="db" src="../../src/assets/database.svg" />
+      <img className="logo" src={`../../src/assets/${props.databaseName}-logo.png`} /> */}
+      <img className="db" src="../../src/assets/database.svg" />
+      <img className="logo" src={`../../src/assets/${props.databaseName}-logo.png`} />
       <DataFlowArrow className={'Hello'} active={props.active} />
     </div>
   );

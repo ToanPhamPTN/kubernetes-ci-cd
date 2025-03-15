@@ -3,7 +3,8 @@ kind: Service
 metadata:
   name: kr8sswordz
   labels:
-    app: kr8sswordz
+    app: kr8ssword
+    tier: kr8sswordzz
 spec:
   ports:
     - port: 80
@@ -14,7 +15,7 @@ spec:
   type: NodePort
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kr8sswordz
@@ -23,6 +24,10 @@ metadata:
 spec:
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app: kr8sswordz
+      tier: kr8sswordz
   template:
     metadata:
       labels:
@@ -30,26 +35,45 @@ spec:
         tier: kr8sswordz
     spec:
       containers:
-      - image: 127.0.0.1:30400/kr8sswordz:$BUILD_TAG
+      - image: 192.168.49.2:30400/kr8sswordz:$BUILD_TAG
         name: kr8sswordz
         imagePullPolicy: Always
         ports:
         - containerPort: 3002
           name: kr8sswordz
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
- name: kr8sswordz
+  name: kr8sswordz
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  backend:
-    serviceName: kr8sswordz
-    servicePort: 80
   rules:
-  - host: kr8sswordz.192.168.99.108.xip.io
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: kr8sswordz
-          servicePort: 80
+    - host: kr8sswordz.192.168.49.2.xip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kr8sswordz
+                port:
+                  number: 80
+
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#  name: kr8sswordz
+# spec:
+#   backend:
+#     serviceName: kr8sswordz
+#     servicePort: 80
+#   rules:
+#   - host: kr8sswordz.192.168.99.108.xip.io
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: kr8sswordz
+#           servicePort: 80

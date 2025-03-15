@@ -1,20 +1,26 @@
+
+// Utilities
+@use 'styles/utils/utils';
+
+// Atoms
+@use 'styles/atoms/atoms';
+
+// Molecules
+@use 'styles/molecules/molecules';
+
+// Organisms
+@use 'styles/organisms/organisms';
+
+// Templates
+@use 'styles/templates/templates';
+
+// Templates -> variables
+@use './styles/utils/_variables' as *;
+
+
 // Library imports
 @import '//cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css';
 
-// Utilities
-@import 'styles/utils/utils';
-
-// Atoms
-@import 'styles/atoms/atoms';
-
-// Molecules
-@import 'styles/molecules/molecules';
-
-// Organisms
-@import 'styles/organisms/organisms';
-
-// Templates
-@import 'styles/templates/templates';
 
  // Extend common html styles
 %html {

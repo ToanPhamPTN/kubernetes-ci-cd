@@ -5,7 +5,7 @@
 // Styleguide 1.0.0
 
 // styleguide:ignore:start
-@import './normalize',
-        './variables',
-        './typography';
+@use './normalize';
+@use './variables';
+@use './typography';
 // styleguide:ignore:end

@@ -1,4 +1,4 @@
-@import '../utils/variables';
+@use '../utils/variables' as *;
 
 button, .button {
     cursor: pointer;

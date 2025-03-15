@@ -3,6 +3,7 @@ import constants from '../constants';
 import * as types from './actionTypes';
 
 const baseUrl = `http://monitor-scale.${constants.minikubeIp}.xip.io`;
+//const baseUrl = `http://localhost:3001`;
 const socket = io(baseUrl);
 
 export function getPods () {
@@ -12,8 +13,10 @@ export function getPods () {
         resp.json()
       ))
       .then(json => {
+        console.log("Response Data getPods:", json);
         const pods = json.pods.map(pod => (
-          concatServiceName(pod.key)
+          console.log("Toan " + pod),
+          concatServiceName(pod)
         ));
         dispatch({type: types.websocket.GET_PODS, pods});
       })
@@ -102,7 +105,8 @@ export function submitConsecutiveRequests (count) {
 }
 
 function concatServiceName (name) {
-  const parts = name.split('/');
+  //const parts = name.split('/');
+  const parts = name.split('/').filter(Boolean);
   const serviceName = parts[parts.length - 1];
   return serviceName;
 }

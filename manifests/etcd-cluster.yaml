@@ -1,4 +1,4 @@
-apiVersion: "etcd.database.coreos.com/v1beta2"
+apiVersion: "etcd.database.coreos.com/v1"
 kind: "EtcdCluster"
 metadata:
   name: "example-etcd-cluster"
@@ -8,5 +8,5 @@ metadata:
   #   etcd.database.coreos.com/scope: clusterwide
 spec:
   size: 3
-  version: "3.2.13"
+  version: "3.5.19"
 

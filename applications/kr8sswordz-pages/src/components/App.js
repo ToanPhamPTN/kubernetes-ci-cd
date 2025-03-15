@@ -12,7 +12,8 @@ class App extends React.Component {
     if (this.props.webSocketLoading || this.props.puzzleLoading) {
       loading = true;
     }
-
+    console.log("webSocketLoading " + this.props.webSocketLoading)
+    console.log("puzzleLoading " + this.props.puzzleLoading)
     return (
       <div>
         {loading &&

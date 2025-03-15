@@ -1,4 +1,4 @@
-@import '../utils/variables';
+@use '../utils/variables' as *;
 
 .loader {
     border: 16px solid $brand-gray;

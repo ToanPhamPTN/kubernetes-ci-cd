@@ -1,39 +1,113 @@
-var express = require('express');
-var app = express();
-var http = require('http').Server(app);
-var request = require('request');
-var async = require('async');
-var io = require('socket.io')(http);
-var path = require("path");
-var Etcd = require('node-etcd');
-var cors = require('cors');
+const express = require('express');
+const { Etcd3 } = require('etcd3');
+const app = express();
+const http = require('http').Server(app);
+const request = require('request');
+const async = require('async');
+const io = require('socket.io')(http);
+const path = require("path");
+const cors = require('cors');
+const bodyParser = require("body-parser");
 
 app.use(express.static('public'));
-
-var bodyParser = require("body-parser");
-
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-etcd = new Etcd("http://example-etcd-cluster-client-service:2379");
-etcd.mkdirSync('pod-list');
-
-var watcher = etcd.watcher("pod-list", null, {recursive: true});
-watcher.on("change", function(val) {
-
-  var podChange = { pods: val.node.key, action: val.action };
-  console.log(JSON.stringify(podChange));
-  io.emit('pods', podChange);
+const etcd = new Etcd3({
+  hosts: [
+    "http://192.168.49.2:32379"
+  ]
 });
 
+async function testConnection() {
+  try {
+    await etcd.put("/config/app_name").value("MyNodeApp");
+    const value = await etcd.get("/config/app_name").string();
+    console.log("✔️ Retrieved from etcd:", value);
+  } catch (error) {
+    console.error("❌ Error connecting to etcd:", error);
+  }
+}
+
+testConnection();
+
+async function initializeEtcd() {
+  try {
+    await etcd.put('pod-list/').value('');
+  } catch (error) {
+    console.error("Failed to initialize pod-list:", error);
+  }
+}
+
+initializeEtcd();
+
+async function watchPods() {
+  const watcher = await etcd.watch().prefix('pod-list/').create();
+  
+  watcher.on('put', (res) => {
+    console.log("Pod added:", res.key.toString());
+    io.emit('pods', { pods: res.key.toString(), action: 'added' });
+  });
+
+  watcher.on('delete', (res) => {
+    console.log("Pod removed:", res.key.toString());
+    io.emit('pods', { pods: res.key.toString(), action: 'deleted' });
+  });
+}
+
+watchPods();
+
+app.post('/scale', function (req, res, next) {
+  const scale = req.body.count;
+  console.log('Count requested is: %s', scale);
+  const url = "http://127.0.0.1:2345/apis/apps/v1/namespaces/default/deployments/puzzle/scale";
+
+  var putBody = {
+    // kind:"Scale",
+    // apiVersion:"apps/v1",
+    metadata: { 
+      name:"puzzle",
+      namespace:"default"
+    },
+    spec: {
+      replicas:1
+    },
+    status:{}
+  };
+  putBody.spec.replicas = scale;
+
+  request({ url, method: 'PUT', json: putBody }, function (err, httpResponse, body) {
+    if (err) {
+      console.error('Failed to scale:', err);
+      return next(err);
+    }
+    console.log('Response:', JSON.stringify(httpResponse));
+    res.status(httpResponse.statusCode).json(body);
+  });
+});
+
+/* 
 app.post('/scale', function (req, res) {
   var scale = req.body.count;
   console.log('Count requested is: %s', scale);
-  var url = "http://127.0.0.1:2345/apis/extensions/v1beta1/namespaces/default/deployments/puzzle/scale";
+  // var url = "http://127.0.0.1:2345/apis/extensions/v1beta1/namespaces/default/deployments/puzzle/scale";
+  var url = "http://127.0.0.1:2345/apis/apps/v1/namespaces/default/deployments/puzzle/scale";
+  // var putBody = {
+  //   kind:"Scale",
+  //   apiVersion:"extensions/v1beta1",
+  //   metadata: { 
+  //     name:"puzzle",
+  //     namespace:"default"
+  //   },
+  //   spec: {
+  //     replicas:1
+  //   },
+  //   status:{}
+  // };
   var putBody = {
-    kind:"Scale",
-    apiVersion:"extensions/v1beta1",
+    // kind:"Scale",
+    // apiVersion:"apps/v1",
     metadata: { 
       name:"puzzle",
       namespace:"default"
@@ -47,107 +121,108 @@ app.post('/scale', function (req, res) {
 
   request({ url: url, method: 'PUT', json: putBody}, function (err, httpResponse, body) {
     if (err) {
-      console.error('Failed to scale:', err);
-      next(err);
+      return console.error('Failed to scale:', err);
     }
-    console.log('Response: ' + JSON.stringify(httpResponse));
-    res.status(httpResponse.statusCode).json(body);
+    console.log(body)
+    console.log('Scale success!');
+    res.send('success');
   });
 });
+*/
 
 app.post('/loadtest/concurrent', function (req, res) {
-
-  var count = req.body.count;
+  const count = req.body.count;
   console.log('Count requested is: %s', count);
-  var url = "http://puzzle:3000/puzzle/v1/crossword";
-  var myUrls = [];
-  for (var i = 0; i < req.body.count; i++) {
-    myUrls.push(url);
-  } 
-  async.map(myUrls, function(url, callback) {
-    request(url, function(error, response, html){
-      if (response && response.hasOwnProperty("statusCode")) {
+  const url = "http://puzzle:3000/puzzle/v1/crossword";
+  const myUrls = Array(count).fill(url);
+
+  async.map(myUrls, function (url, callback) {
+    request(url, function (error, response) {
+      if (response?.statusCode) {
         console.log(response.statusCode);
       } else {
-        console.log("Error: " + error);
+        console.error("Error:", error);
       }
     });
-  }, function(err, results) {
+  }, function (err, results) {
     console.log(results);
   });
+
   res.send('concurrent done');
 });
 
 app.post('/loadtest/consecutive', function (req, res) {
-  
-  var count = req.body.count;
-  var url = "http://puzzle:3000/puzzle/v1/crossword";
-  var callArray = [];
+  const count = req.body.count;
+  const url = "http://puzzle:3000/puzzle/v1/crossword";
+  const callArray = [];
 
-  for (var i = 0; i < req.body.count; i++) {
-    
+  for (let i = 0; i < count; i++) {
     callArray.push(function (cb) {
-      setTimeout(function () {
-        request(url, function(error, response, html) {
-          cb(null, response && response.statusCode);
+      setTimeout(() => {
+        request(url, function (error, response) {
+          cb(null, response?.statusCode);
         });
       }, 100);
     });
   }
   async.series(callArray, function (err, results) {
-    var finalCount = results && results.length;
-    console.log(`${finalCount} requests sent.`)
+    console.log(`${results?.length || 0} requests sent.`);
   });
   res.send('consecutive done');
 });
 
-app.get('/up/:podId', function (req, res) {
-  console.log('Server UP: %s', req.params.podId);
-  etcd.setSync("pod-list/" + req.params.podId, req.params.podId);
+app.get('/up/:podId', async function (req, res) {
+  const podId = req.params.podId;
+  console.log('Server UP:', podId);
+  await etcd.put(`pod-list/${podId}`).value(podId);
   res.send('up done');
 });
 
-app.get('/down/:podId', function (req, res) {
-  console.log('Server DOWN: %s', req.params.podId);
-  etcd.delSync("pod-list/" + req.params.podId, req.params.podId);
+app.get('/down/:podId', async function (req, res) {
+  const podId = req.params.podId;
+  console.log('Server DOWN:', podId);
+  await etcd.delete().key(`pod-list/${podId}`);
   res.send('down done');
 });
 
 app.get('/hit/:podId', function (req, res) {
-
-  var d = new Date();
-  var n = d.getTime();
-
-  console.log("Emitting hit from %s", req.params.podId);
-  io.emit('hit', { podId: req.params.podId, time: n });
-  res.send('hit done')
+  const timestamp = Date.now();
+  console.log("Emitting hit from", req.params.podId);
+  io.emit('hit', { podId: req.params.podId, time: timestamp });
+  res.send('hit done');
 });
 
-app.get('/pods', function (req, res) {
-  var pods = etcd.getSync("pod-list",{ recursive: true });
-  res.setHeader('Content-Type', 'application/json');
-  res.send(JSON.stringify({pods: pods.body.node.nodes}));
+app.get('/pods', async function (req, res) {
+  try {
+    const pods = await etcd.getAll().prefix('pod-list/').keys();
+    res.json({ pods });
+  } catch (error) {
+    console.error("Error fetching pods:", error);
+    res.status(500).send("Error retrieving pods");
+  }
 });
 
-app.delete('/pods', function (req, res) {
-
-  var pods = etcd.delSync("pod-list/",{ recursive: true });
-  res.send('pods deleted')
+app.delete('/pods', async function (req, res) {
+  try {
+    await etcd.delete().prefix('pod-list/');
+    res.send('pods deleted');
+  } catch (error) {
+    console.error("Error deleting pods:", error);
+    res.status(500).send("Error deleting pods");
+  }
 });
 
-io.on('connection', function(socket){
-  
-  console.log("Websocket connection established.");
-  socket.on('disconnect', function() {
-    console.log("Websocket disconnect.");
-  })
+io.on('connection', function (socket) {
+  console.log("WebSocket connection established.");
+  socket.on('disconnect', function () {
+    console.log("WebSocket disconnected.");
+  });
 });
 
-app.get('/', function(req,res){
+app.get('/', function (req, res) {
   res.send('basic GET successful');
 });
 
 http.listen(3001, function () {
   console.log('Listening on port 3001!');
 });
-

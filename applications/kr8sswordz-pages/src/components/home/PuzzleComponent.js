@@ -187,6 +187,7 @@ class PuzzleComponent extends React.Component {
   reloadPuzzle () {
     this.props.puzzleActions.sendingData();
     this.props.puzzleActions.getPuzzleData();
+    console.log("reloadPuzzle " + this.props.puzzleActions.getPuzzleData());
   }
 
   clearPuzzle () {

@@ -1,4 +1,4 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: puzzle
@@ -7,6 +7,10 @@ metadata:
 spec:
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app: puzzle
+      tier: puzzle
   template:
     metadata:
       labels:
@@ -14,7 +18,7 @@ spec:
         tier: puzzle
     spec:
       containers:
-      - image: 127.0.0.1:30400/puzzle:$BUILD_TAG
+      - image: 192.168.49.2:30400/puzzle:$BUILD_TAG
         name: puzzle
         imagePullPolicy: Always
         lifecycle:
@@ -44,7 +48,7 @@ spec:
     tier: puzzle
   type: NodePort
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mongo
@@ -53,6 +57,10 @@ metadata:
 spec:
   strategy:
     type: Recreate
+  selector:
+    matchLabels:
+      app: mongo
+      tier: mongo
   template:
     metadata:
       labels:
@@ -82,19 +90,37 @@ spec:
     tier: mongo
   type: NodePort
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
- name: puzzle
+  name: puzzle
 spec:
-  backend:
-    serviceName: puzzle
-    servicePort: 3000
   rules:
-  - host: puzzle.192.168.99.108.xip.io
-    http:
-      paths:
-      - path: /
-        backend:
-          serviceName: puzzle
-          servicePort: 3000
+    - host: puzzle.192.168.49.2.xip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: puzzle
+                port:
+                  number: 3000
+
+
+# apiVersion: extensions/v1beta1
+# kind: Ingress
+# metadata:
+#  name: puzzle
+# spec:
+#   backend:
+#     serviceName: puzzle
+#     servicePort: 3000
+#   rules:
+#   - host: puzzle.192.168.99.108.xip.io
+#     http:
+#       paths:
+#       - path: /
+#         backend:
+#           serviceName: puzzle
+#           servicePort: 3000

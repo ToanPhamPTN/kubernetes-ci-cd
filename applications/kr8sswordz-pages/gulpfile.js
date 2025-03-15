@@ -4,24 +4,20 @@ const gulp = require('gulp');
 const del = require('del');
 const webpack = require('webpack-stream');
 const sourcemaps = require('gulp-sourcemaps');
-const sass = require('gulp-sass');
-const browerSync = require('browser-sync');
+const sass = require('gulp-sass')(require('sass'));
+const browserSync = require('browser-sync').create();
 const connect = require('gulp-connect');
 const historyApiFallback = require('connect-history-api-fallback');
-const runSequence = require('run-sequence');
 const plumber = require('gulp-plumber');
 const imageMin = require('gulp-imagemin');
 const autoprefixer = require('autoprefixer');
 const postcss = require('gulp-postcss');
-const fs = require('fs');
 
 const src = './src/';
 const dist = './dist/';
 
-gulp.task('clean:dist', (done) => {
-  del(dist).then(() => {
-    done();
-  });
+gulp.task('clean:dist', () => {
+  return del(dist);
 });
 
 gulp.task('compile:js', () => {
@@ -34,9 +30,9 @@ gulp.task('compile:js', () => {
 gulp.task('compile:sass', () => {
   return gulp.src(src + '**/*.scss')
     .pipe(sourcemaps.init())
-    .pipe(sass({includePaths: ['node_modules/susy/sass']}).on('error', sass.logError))
-    .pipe(postcss([ autoprefixer({ browsers: ['> 5%', 'iOS 7'] }) ]))
-    .pipe(sourcemaps.write())
+    .pipe(sass().on('error', sass.logError))
+    .pipe(postcss([autoprefixer()]))
+    .pipe(sourcemaps.write('.'))
     .pipe(gulp.dest(dist));
 });
 
@@ -52,32 +48,29 @@ gulp.task('copy:images', () => {
 });
 
 gulp.task('copy:assets', () => {
-  return gulp.src([src + 'assets/**/*.*', !src + 'assets/**/*.jpg', !src + 'assets/**/*.png'])
+  return gulp.src([src + 'assets/**/*.*', '!' + src + 'assets/**/*.jpg', '!' + src + 'assets/**/*.png'])
     .pipe(gulp.dest(dist + 'assets/'));
 });
 
 gulp.task('watch:html', () => {
-  gulp.watch(src + '**/*.html', ['copy:html']);
+  gulp.watch(src + '**/*.html', gulp.series('copy:html'));
 });
 
 gulp.task('watch:sass', () => {
-  gulp.watch([src + 'styles/**/*.scss', src + 'style.scss'], ['compile:sass']);
+  gulp.watch([src + 'styles/**/*.scss', src + 'style.scss'], gulp.series('compile:sass'));
 });
 
 gulp.task('watch:js', () => {
-  gulp.watch([src + '**/*.js', '!' + src + '**/*.test.js'], ['compile:js']);
+  gulp.watch([src + '**/*.js', '!' + src + '**/*.test.js'], gulp.series('compile:js'));
 });
 
-gulp.task('build:dev', (done) => {
-  runSequence('clean:dist',
-    ['compile:js', 'compile:sass', 'copy:html', 'copy:images', 'copy:assets'],
-    done);
-});
+gulp.task('build:dev', gulp.series(
+  'clean:dist',
+  gulp.parallel('compile:js', 'compile:sass', 'copy:html', 'copy:images', 'copy:assets')
+));
 
-
-// Development Build
-gulp.task('serve:dev', ['build:dev', 'watch:html', 'watch:sass', 'watch:js'], () => {
-  browerSync.init({
+gulp.task('serve:dev', gulp.series('build:dev', () => {
+  browserSync.init({
     files: ['dist/**/*.js', 'dist/**/*.html', 'dist/**/*.css'],
     server: {
       baseDir: ['./dist/', './'],
@@ -87,17 +80,21 @@ gulp.task('serve:dev', ['build:dev', 'watch:html', 'watch:sass', 'watch:js'], ()
     port: 3002
   });
 
-});
+  gulp.watch(src + '**/*.html', gulp.series('copy:html')).on('change', browserSync.reload);
+  gulp.watch([src + 'styles/**/*.scss', src + 'style.scss'], gulp.series('compile:sass')).on('change', browserSync.reload);
+  gulp.watch([src + '**/*.js', '!' + src + '**/*.test.js'], gulp.series('compile:js')).on('change', browserSync.reload);
+}));
 
-// Production Build
-gulp.task('serve:prod', ['build:dev'], () => {
+gulp.task('serve:prod', gulp.series('build:dev', () => {
   connect.server({
     root: ['./dist/', './'],
     port: 3002,
+    host: '0.0.0.0',
     livereload: false,
     middleware: (connect, opt) => {
-      return [ historyApiFallback() ];
+      return [historyApiFallback()];
     }
   });
+}));
 
-});
+gulp.task('default', gulp.series('serve:dev'));
