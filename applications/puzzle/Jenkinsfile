@@ -33,9 +33,10 @@ node {
         
         sh "kubectl config view"
         sh "kubectl get nodes"
-        sed -i 's|\\$BUILD_TAG|${tag}|g' applications/${appName}/k8s/deployment.yaml
-    
-        sh "kubectl apply -f applications/${appName}/k8s/"
+        sh """
+        sed -i "s|\\\$BUILD_TAG|${tag}|g" applications/${appName}/k8s/deployment.yaml
+        kubectl apply -f applications/${appName}/k8s/
+        """
         sh "kubectl rollout restart deployment/${appName}"
     }    
 }
