@@ -10,20 +10,20 @@ node {
     appName = "puzzle"
     registryHost = "192.168.49.2:30400/"
     imageName = "${registryHost}${appName}:${tag}"
-    latestImage = "${registryHost}${appName}:latest"
+    // latestImage = "${registryHost}${appName}:latest"
 
     env.BUILDIMG=imageName
     env.BUILD_TAG=tag
 
     stage("Build") {
-        //sh "docker build -t ${imageName} applications/puzzle"
-        sh "docker build -t ${imageName} -t ${latestImage} -f applications/puzzle/Dockerfile applications/puzzle"
+        sh "docker build -t ${imageName} applications/puzzle"
+        //sh "docker build -t ${imageName} -t ${latestImage} -f applications/puzzle/Dockerfile applications/puzzle"
         println "Build docker completed."
     }
 
     stage("Push") {
         sh "docker push ${imageName}"
-        sh "docker push ${latestImage}"
+        //sh "docker push ${latestImage}"
     }
 
     stage("Deploy") {
