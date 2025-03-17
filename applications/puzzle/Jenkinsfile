@@ -7,12 +7,11 @@ node {
     sh "git rev-parse --short HEAD > commit-id"
 
     tag = readFile('commit-id').replace("\n", "").replace("\r", "")
-    //tag="git rev-parse --short HEAD"
     appName = "puzzle"
     registryHost = "192.168.49.2:30400/"
     imageName = "${registryHost}${appName}:${tag}"
     // latestImage = "${registryHost}${appName}:latest"
-    sh "imageName ${imageName}"
+
     env.BUILDIMG=imageName
     env.BUILD_TAG=tag
 
@@ -26,20 +25,6 @@ node {
         sh "docker push ${imageName}"
         //sh "docker push ${latestImage}"
     }
-
-// BUILD_TAG=`git rev-parse --short HEAD`
-
-// # #Build the docker image
-// docker build -t 192.168.49.2:30400/puzzle:$BUILD_TAG -f applications/puzzle/Dockerfile applications/puzzle
-
-// # #Setup the proxy for the registry
-// # #docker stop socat-registry; docker rm socat-registry; docker run -d -e "REG_IP=`minikube ip`" -e "REG_PORT=30400" --name socat-registry -p 30400:5000 socat-registry
-
-// echo "5 second sleep to make sure the registry is ready"
-// sleep 5;
-
-// # #Push the images
-// docker push 192.168.49.2:30400/puzzle:$BUILD_TAG
 
     stage("Deploy") {
         //kubernetesDeploy configs: "applications/${appName}/k8s/*.yaml", kubeconfigId: 'kenzan_kubeconfig'
