@@ -64,8 +64,6 @@ app.post('/scale', function (req, res, next) {
   const url = "http://127.0.0.1:2345/apis/apps/v1/namespaces/default/deployments/puzzle/scale";
 
   var putBody = {
-    // kind:"Scale",
-    // apiVersion:"apps/v1",
     metadata: { 
       name:"puzzle",
       namespace:"default"
@@ -86,49 +84,6 @@ app.post('/scale', function (req, res, next) {
     res.status(httpResponse.statusCode).json(body);
   });
 });
-
-/* 
-app.post('/scale', function (req, res) {
-  var scale = req.body.count;
-  console.log('Count requested is: %s', scale);
-  // var url = "http://127.0.0.1:2345/apis/extensions/v1beta1/namespaces/default/deployments/puzzle/scale";
-  var url = "http://127.0.0.1:2345/apis/apps/v1/namespaces/default/deployments/puzzle/scale";
-  // var putBody = {
-  //   kind:"Scale",
-  //   apiVersion:"extensions/v1beta1",
-  //   metadata: { 
-  //     name:"puzzle",
-  //     namespace:"default"
-  //   },
-  //   spec: {
-  //     replicas:1
-  //   },
-  //   status:{}
-  // };
-  var putBody = {
-    // kind:"Scale",
-    // apiVersion:"apps/v1",
-    metadata: { 
-      name:"puzzle",
-      namespace:"default"
-    },
-    spec: {
-      replicas:1
-    },
-    status:{}
-  };
-  putBody.spec.replicas = scale;
-
-  request({ url: url, method: 'PUT', json: putBody}, function (err, httpResponse, body) {
-    if (err) {
-      return console.error('Failed to scale:', err);
-    }
-    console.log(body)
-    console.log('Scale success!');
-    res.send('success');
-  });
-});
-*/
 
 app.post('/loadtest/concurrent', function (req, res) {
   const count = req.body.count;
