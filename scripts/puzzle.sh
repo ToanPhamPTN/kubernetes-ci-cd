@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #Retrieve the latest git commit hash
-BUILD_TAG=`git rev-parse --short HEAD`
+BUILD_TAG=$(git rev-parse --short HEAD | tr -d '\n\r')
 
 # #Build the docker image
 docker build -t 192.168.49.2:30400/puzzle:$BUILD_TAG -f applications/puzzle/Dockerfile applications/puzzle
