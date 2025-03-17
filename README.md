@@ -34,6 +34,15 @@ To generate this readme: `node readme.js`
 - To ensure you are starting with a clean slate, delete any previous minikube contexts.
 
  `minikube stop; minikube delete; sudo rm -rf ~/.minikube; sudo rm -rf ~/.kube`
+- Open /etc/docker/daemon.json, add:
+
+` { "insecure-registries": ["192.168.49.2:30400"] }`
+
+- Open /etc/hosts, add:
+
+`192.168.49.2 monitor-scale.192.168.49.2.xip.io`
+`192.168.49.2 puzzle.192.168.49.2.xip.io`
+`192.168.49.2 kr8sswordz.192.168.49.2.xip.io`
 
 ## Tutorial Steps
 
@@ -67,9 +76,9 @@ Deploy the public nginx image from DockerHub into a pod. Nginx is an open source
 
 Create a K8s Service for the deployment. This will expose the nginx pod so you can access it with a web browser.
 
-`kubectl expose deployment nginx --type NodePort --port 80`
-
 `kubectl create deployment nginx --image=nginx`
+
+`kubectl expose deployment nginx --type NodePort --port 80`
 
 
 #### Step6
@@ -212,9 +221,10 @@ Open the Jenkins UI in a web browser.
 
 Display the Jenkins admin password with the following command, and right-click to copy it.
 
-``kubectl exec -it `kubectl get pods --selector=app=jenkins --output=jsonpath={.items..metadata.name}` cat /var/jenkins_home/secrets/initialAdminPassword``
+``kubectl exec -it $(kubectl get pods --selector=app=jenkins --output=jsonpath={.items..metadata.name}) -- cat /var/jenkins_home/secrets/initialAdminPassword``
 
-<!-- kubectl exec -it $(kubectl get pods --selector=app=jenkins --output=jsonpath={.items..metadata.name}) -- cat /var/jenkins_home/secrets/initialAdminPassword -->
+<!-- ``kubectl exec -it `kubectl get pods --selector=app=jenkins --output=jsonpath={.items..metadata.name}` cat /var/jenkins_home/secrets/initialAdminPassword`` -->
+
 
 #### Step9
 
@@ -231,15 +241,16 @@ Before we create a pipeline, we first need to provision the Kubernetes Continuou
 #### Step12
 
 `kubectl exec -it jenkins-569f9fb4d6-z5xx2 -n default -- cat /var/jenkins_home/.kube/config`
+
 `kubectl exec jenkins-569f9fb4d6-z5xx2 -n default -- sh -c "sed -i 's|192.168.99.108|192.168.49.2|g' /var/jenkins_home/.kube/config"`
 
-The following values must be entered precisely as indicated:
+<!-- The following values must be entered precisely as indicated:
 - Kind: `Kubernetes configuration (kubeconfig)`
 - ID: `kenzan_kubeconfig`
 - Kubeconfig: `From a file on the Jenkins master`
 - specify the file path: `/var/jenkins_home/.kube/config`
 
-Finally click *Ok*.
+Finally click *Ok*. -->
 
 #### Step13
 
