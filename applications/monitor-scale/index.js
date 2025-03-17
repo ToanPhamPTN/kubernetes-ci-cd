@@ -8,6 +8,7 @@ const io = require('socket.io')(http);
 const path = require("path");
 const cors = require('cors');
 const bodyParser = require("body-parser");
+const fs = require('fs');
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -20,24 +21,47 @@ const etcd = new Etcd3({
   ]
 });
 
-async function testConnection() {
-  try {
-    await etcd.put("/config/app_name").value("MyNodeApp");
-    const value = await etcd.get("/config/app_name").string();
-    console.log("✔️ Retrieved from etcd:", value);
-  } catch (error) {
-    console.error("❌ Error connecting to etcd:", error);
-  }
-}
-
-//testConnection();
-
 async function initializeEtcd() {
+  
   try {
-    await etcd.put('pod-list/').value('');
-    //await etcd.delete().prefix('pod-list/');
+    await etcd.delete().prefix('pod-list/');
+
+    const url = "https://kubernetes.default.svc/api/v1/namespaces/default/pods";
+
+    const token = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token', 'utf8');
+    const ca = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/ca.crt');
+
+    request({
+      url,
+      method: 'GET',
+      json: true,
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      ca: ca  
+    }, async (error, response, body) => {
+      if (error) {
+        console.error("❌ Error fetching pods from Kubernetes:", error);
+        return;
+      }
+
+      if (response.statusCode !== 200) {
+        console.error("❌ Failed to get pods, status:", response.statusCode);
+        return;
+      }
+
+      const pods = (body.items || [])
+        .filter(pod => pod.metadata.name.startsWith("puzzle-"))
+        .map(pod => pod.metadata.name);
+
+      for (const pod of pods) {
+        await etcd.put(`pod-list/${pod}`).value(pod);
+      }
+
+      console.log("✅ Initialized pod list:", pods);
+    });
   } catch (error) {
-    console.error("Failed to initialize pod-list:", error);
+    console.error("❌ Failed to initialize pod-list:", error);
   }
 }
 
