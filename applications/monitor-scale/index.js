@@ -35,7 +35,7 @@ async function testConnection() {
 async function initializeEtcd() {
   try {
     await etcd.put('pod-list/').value('');
-    await etcd.delete().prefix('pod-list/');
+    //await etcd.delete().prefix('pod-list/');
   } catch (error) {
     console.error("Failed to initialize pod-list:", error);
   }
