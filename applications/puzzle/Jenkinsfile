@@ -6,13 +6,13 @@ node {
 
     sh "git rev-parse --short HEAD > commit-id"
 
-    //tag = readFile('commit-id').replace("\n", "").replace("\r", "")
-    tag="git rev-parse --short HEAD"
+    tag = readFile('commit-id').replace("\n", "").replace("\r", "")
+    //tag="git rev-parse --short HEAD"
     appName = "puzzle"
     registryHost = "192.168.49.2:30400/"
     imageName = "${registryHost}${appName}:${tag}"
     // latestImage = "${registryHost}${appName}:latest"
-
+    sh "imageName ${imageName}"
     env.BUILDIMG=imageName
     env.BUILD_TAG=tag
 
