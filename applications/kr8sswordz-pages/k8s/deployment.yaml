@@ -3,8 +3,8 @@ kind: Service
 metadata:
   name: kr8sswordz
   labels:
-    app: kr8ssword
-    tier: kr8sswordzz
+    app: kr8sswordz
+    tier: kr8sswordz
 spec:
   ports:
     - port: 80

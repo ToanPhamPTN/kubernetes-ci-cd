@@ -26,6 +26,15 @@ async function initializeEtcd() {
   try {
     await etcd.delete().prefix('pod-list/');
 
+    const remainingKeys = await etcd.getAll().prefix('pod-list/').keys();
+    if (remainingKeys.length > 0) {
+      console.warn("⚠️ Some pod-list entries still exist:", remainingKeys);
+      for (const key of remainingKeys) {
+        await etcd.delete().key(key);
+      }
+      console.log("✅ Manually removed remaining pod-list entries.");
+    }
+
     const url = "https://kubernetes.default.svc/api/v1/namespaces/default/pods";
 
     const token = fs.readFileSync('/var/run/secrets/kubernetes.io/serviceaccount/token', 'utf8');
