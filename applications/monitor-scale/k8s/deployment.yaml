@@ -41,13 +41,19 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 3001
-          name: monitor-scale
+          name: monitor-scale       
       - image: zappi/kubectl:latest
         name: kubectl-api
-        args: ["proxy","-p","2345"]
-        ports:
-        - containerPort: 2345
-          name: kubectl-api          
+        command: ["/bin/sh", "-c"]
+        args:
+          - |
+            trap "echo 'Received SIGTERM, stopping kubectl proxy...'; exit 0" SIGTERM;
+            kubectl proxy -p 2345 --accept-hosts=.* &
+            wait
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/bin/sh", "-c", "pkill kubectl || true"]
 
 ---
 apiVersion: networking.k8s.io/v1
