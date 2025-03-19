@@ -215,3 +215,29 @@ app.get('/', function (req, res) {
 http.listen(3001, function () {
   console.log('Listening on port 3001!');
 });
+
+process.on('SIGTERM', async () => {
+  console.log("⚠️ Received SIGTERM, shutting down gracefully...");
+
+  const podId = process.env.HOSTNAME;
+  if (podId) {
+    console.log(`🗑 Removing pod ${podId} from etcd`);
+    try {
+      await etcd.delete().key(`pod-list/${podId}`);
+    } catch (error) {
+      console.error("❌ Error deleting pod from etcd:", error);
+    }
+  }
+
+  io.close(() => console.log("🔌 WebSocket closed"));
+
+  await new Promise((resolve) => {
+    http.close(() => {
+      console.log("🛑 Server closed");
+      resolve();
+    });
+  });
+
+  console.log("✅ Shutdown complete, exiting...");
+  process.exit(0);
+});
